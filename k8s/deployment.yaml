@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geth
+  template:
+    metadata:
+      labels:
+        app: geth
+    spec:
+      containers:
+      - name: geth
+        image: ethereum/client-go:v1.8.10
+        command: ['/bin/sh', '-c', '/opt/geth/config/entrypoint.sh']
+        ports:
+        - name: rpc
+          containerPort: 8545
+        volumeMounts:
+        - name: geth-datadir
+          mountPath: /opt/geth/geth
+        - name: geth-config
+          mountPath: /opt/geth/config
+        - name: geth-secret
+          mountPath: /opt/geth/secret
+          readOnly: true
+      volumes:
+      - name: geth-datadir
+        emptyDir: {}
+      - name: geth-config
+        configMap:
+          name: geth-config
+          defaultMode: 0755
+      - name: geth-secret
+        secret:
+          secretName: geth-secret
