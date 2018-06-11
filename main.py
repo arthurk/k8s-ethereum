@@ -1,4 +1,5 @@
 import pathlib
+import json
 import yaml
 import random
 import string
@@ -21,6 +22,89 @@ logger.setLevel(logging.INFO)
 encode = lambda s: base64.b64encode(str.encode(s)).decode()
 
 config.load_kube_config()
+
+
+class GethLightClient:
+    """
+    Geth Light Client
+    """
+    def __init__(self, name):
+        self.name = name
+        self.k8s_config_dir = pathlib.Path('k8s-geth-light-client/')
+
+    def create_namespace(self):
+        config = self.k8s_config_dir / 'namespace.yaml'
+        with config.open() as f:
+            body = yaml.load(f)
+
+        body['metadata']['name'] = self.name
+
+        try:
+            api_instance = client.CoreV1Api()
+            api_instance.create_namespace(body)
+        except ApiException as e:
+            error = json.loads(e.body)
+            if error['code'] == 409 and error['reason'] == 'AlreadyExists':
+                return
+            else:
+                raise
+
+        logger.debug(f'Created namespace "{self.name}"')
+
+    def delete_namespace(self):
+        try:
+            v1 = client.CoreV1Api()
+            v1.delete_namespace(name=self.name, body=client.V1DeleteOptions())
+        except ApiException as e:
+            if e.status == 404:
+                # don't throw if namespace doesn't exist
+                return
+            else:
+                raise
+        logger.debug(f'Deleted namespace "{self.name}"')
+
+    def create_service(self):
+        config = self.k8s_config_dir / 'service.yaml'
+        with config.open() as f:
+            body = yaml.load(f)
+
+        try:
+            api_instance = client.CoreV1Api()
+            api_instance.create_namespaced_service(self.name, body)
+        except ApiException as e:
+            error = json.loads(e.body)
+            if error['code'] == 409 and error['reason'] == 'AlreadyExists':
+                return
+            else:
+                raise
+
+        logger.debug('Created Service')
+
+    def create_deployment(self):
+        config = self.k8s_config_dir / 'deployment.yaml'
+        with config.open() as f:
+            body = yaml.load(f)
+
+        try:
+            api_instance = client.AppsV1Api()
+            api_instance.create_namespaced_deployment(self.name, body)
+        except ApiException as e:
+            error = json.loads(e.body)
+            if error['code'] == 409 and error['reason'] == 'AlreadyExists':
+                return
+            else:
+                raise
+
+        logger.debug('Created Deployment')
+
+    def create(self):
+        self.create_namespace()
+        self.create_service()
+        self.create_deployment()
+
+    def delete(self):
+        # this will delete all objects under the namespace
+        self.delete_namespace()
 
 
 class PrivateNetwork:
@@ -129,23 +213,27 @@ class PrivateNetwork:
 
 
 def main():
-    # cli args
-    parser = argparse.ArgumentParser(description='k8s ethereum private network')
+    parser = argparse.ArgumentParser(description='k8s ethereum')
     parser.add_argument('--name', dest='name', required=True)
+    parser.add_argument('--light', dest='light', action='store_true', default=False)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--create', dest='create', action='store_true', default=False)
     group.add_argument('--delete', dest='delete', action='store_true', default=False)
     args = parser.parse_args()
 
-    n = PrivateNetwork(args.name)
+    if args.light:
+        logging.info('Starting Geth Light Client')
+        n = GethLightClient(args.name)
+    else:
+        logging.info('Starting Geth in Private Network')
+        n = PrivateNetwork(args.name)
+
     if args.create:
-        logger.info(f'Creating network "{args.name}"')
+        logger.info(f'Creating "{args.name}"')
         n.create()
-        logger.info('Network created')
     elif args.delete:
-        logger.info(f'Deleting network "{args.name}"')
+        logger.info(f'Deleting "{args.name}"')
         n.delete()
-        logger.info('Network deleted')
 
 
 if __name__ == '__main__':

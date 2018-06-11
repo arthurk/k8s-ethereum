@@ -1,11 +1,17 @@
 k8s-ethereum
 ============
 
-Create private Ethereum networks in Kubernetes
+Ethereum Nodes in Kubernetes.
 
-Features:
+Currently supported operations are:
 
-  - Uses Geth
+  - Private network
+  - Mainnet light client
+
+Support for full nodes is planned.
+
+Properties of the private network:
+
   - PoA mining with 3s block time
   - 10 initial accounts each funded with 1 million ether
   - Json-rpc enabled (tested with MetaMask and Truffle)
@@ -15,7 +21,7 @@ Installation
 
 Requirements:
 
-  - A Kubernetes cluster (e.g. minikube) and kubectl configured
+  - A Kubernetes 1.10 cluster (e.g. minikube) and kubectl configured
   - Python 3.6
   - pipenv
 
@@ -24,8 +30,8 @@ Requirements:
 
 Now either prefix all commands with `pipenv run` or run them within `pipenv shell`.
 
-Usage
------
+Usage (Private network)
+-----------------------
 
 ```bash
 # Create network. This will also create 10 initial accounts.
@@ -74,6 +80,16 @@ $ python main.py --name network1 --create
 $ python main.py --name network2 --create
 $ python main.py --name network3 --create
 ```
+
+Usage Light Client
+------------------
+
+```shell
+python main.py --name foo --light --create
+python main.py --name foo --light --delete
+```
+
+Light sync might take hours. Depending on how many peers are available.
 
 Minikube
 --------

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geth
+  template:
+    metadata:
+      labels:
+        app: geth
+    spec:
+      containers:
+      - name: geth
+        image: ethereum/client-go:v1.8.10
+        command: ['/bin/sh', '-c', 'geth --cache 256 --maxpeers 50 --syncmode light --rpc --rpcaddr "0.0.0.0" --rpcapi=db,eth,net,web3 --rpccorsdomain "*" --rpcvhosts="*" --ws --wsaddr "0.0.0.0" --wsorigins "*"']
+        ports:
+        - name: rpc
+          containerPort: 8545
+        - name: ws
+          containerPort: 8546
+        - name: p2p
+          containerPort: 30303
+        volumeMounts:
+        - name: geth-datadir
+          mountPath: /opt/geth/geth
+      volumes:
+      - name: geth-datadir
+        emptyDir: {}
