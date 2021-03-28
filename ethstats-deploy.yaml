@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethstats
+  labels:
+    app: ethstats
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: ethstats
+  template:
+    metadata:
+      labels:
+        app: ethstats
+    spec:
+      containers:
+      - name: ethstats
+        image: ethereumex/eth-stats-dashboard:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 3000
+        env:
+        - name: WS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ethstats-secret
+              key: password

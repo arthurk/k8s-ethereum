@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ethstats
+  labels:
+    app: ethstats
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    # TODO: secret
+    nginx.ingress.kubernetes.io/auth-secret: imti-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
+spec:
+  rules:
+  - host: opcube.local  # TODO: stage/site kustomize
+    http:
+      paths:
+      - backend:
+          service:
+            name: ethstats
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+# TODO: tls?
+#  tls:
+#  - hosts:
+#    - ethstats.eth.imti.co
+#    secretName: imti-dev-production-tls
