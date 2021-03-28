@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: geth
-        image: ethereum/client-go:v1.8.10
+        image: ethereum/client-go:stable
         command: ['/bin/sh', '-c', '/opt/geth/config/entrypoint.sh']
         ports:
         - name: rpc
