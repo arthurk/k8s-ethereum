@@ -8,8 +8,8 @@ kubernetes = "*"
 "pysha3" = "*"
 ecdsa = "*"
 
-[dev-packages]
-ipdb = "*"
-
 [requires]
-python_version = "3.6"
+python_version = "3"
+
+[scripts]
+create_accounts = "python ./create_accounts.py"

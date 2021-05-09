@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: geth
-        image: ethereum/client-go:v1.8.10
+        image: ethereum/client-go:stable
         command: ['/bin/sh', '-c', '/opt/geth/config/entrypoint.sh']
         ports:
         - name: rpc
@@ -27,6 +27,9 @@ spec:
         - name: geth-secret
           mountPath: /opt/geth/secret
           readOnly: true
+        - name: ethstats-secret
+          mountPath: /opt/ethstats/secret
+          readOnly: true
       volumes:
       - name: geth-datadir
         emptyDir: {}
@@ -37,3 +40,6 @@ spec:
       - name: geth-secret
         secret:
           secretName: geth-secret
+      - name: ethstats-secret
+        secret:
+          secretName: ethstats-secret
